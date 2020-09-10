@@ -1,0 +1,92 @@
+---
+- hosts: 192.168.12.132     #定义需要执行主机
+  remote_user: root       #远程用户
+  vars:                   #定义变量
+    http_port: 8080       #变量
+
+  
+  tasks:                             #定义一个任务的开始
+    - name: copy yum        #定义任务的名称
+      copy: src=/etc/yum.repos.d/yum.tar.gz dest=/etc/yum.repos.d/   #调用模块，具体要做的事情
+    - name: create new file          #定义任务的名称
+      file: name=/xia state=touch   #调用模块，具体要做的事情
+    - name: create new file          #定义任务的名称
+      shell: touch /xia/software   #调用模块，具体要做的事情  
+    - name: copy nginx        #定义任务的名称
+      copy: src=/xia/software/nginx-1.19.1.tar.gz dest=/xia/software   #调用模块，具体要做的事情
+    - name: copy zabbix        #定义任务的名称
+      copy: src=/xia/software/zabbix-4.0.4.tar.gz dest=/xia/software   #调用模块，具体要做的事情
+    - name: tar gz        #定义任务的名称
+      shell: tar -xzvf /etc/yum.repos.d/yum.tar.gz  -C /etc/yum.repos.d/
+      
+    #- name: yum         #定义任务的名称
+      #shell: yum clean all && yum repolist && yum makecache
+      
+    - name: tar gz        #定义任务的名称
+      shell: tar -xzvf /xia/software/nginx-1.19.1.tar.gz  -C /xia/software/
+    - name: tar gz        #定义任务的名称
+      shell: tar -xzvf /xia/software/zabbix-4.0.4.tar.gz  -C /xia/software/
+    - name: create dir        #定义任务的名称
+      file: 
+        path: /usr/local/zabbix 
+        state:  directory
+        mode: "0755"  #调用模块，具体要做的事情
+    - name: create dir        #定义任务的名称
+      shell: mkdir /usr/local/nginx
+
+    - name: install package
+      yum: name=libevent-devel
+    - name: install package
+      yum: name=net-snmp-devel
+    - name: install package
+      yum: name=curl-devel
+    - name: install package
+      yum: name=gcc
+    - name: install package
+      yum: name=pcre-devel
+    - name: install package
+      yum: name=openssl-devel
+
+    - name: install zabbix
+      shell: cd /xia/software/zabbix-4.0.4/;./configure --prefix=/usr/local/zabbix  --enable-server  --enable-agent --enable-java  --with-mysql --with-libxml2 --with-unixodbc  --with-net-snmp --with-ssh2 --with-openipmi --with-ldap --with-libcurl --with-iconv;make&&make install
+  
+    - name: install nginx
+      shell: cd /xia/software/nginx-1.19.1/;./configure  --prefix=/usr/local/nginx  --with-http_stub_status_module --with-http_ssl_module; make && make install 
+
+    - name: copy config        #定义任务的名称
+      copy: src=/usr/local/zabbix/etc/zabbix_agentd.conf dest=/usr/local/zabbix/etc/zabbix_agentd.conf   #调用模块，体要做的事情
+    - name: rm conf        #定义任务的名称
+      shell: rm -rf  /usr/local/zabbix/etc/zabbix_agentd.conf.d
+    - name: copy config        #定义任务的名称
+      copy: src=/usr/local/zabbix/etc/zabbix_agentd.conf.d dest=/usr/local/zabbix/etc/ #调用模块，体要做的事情
+
+    - name: copy sh        #定义任务的名称
+      copy: src=/usr/local/bin/nginx_status.sh dest=/usr/local/bin/ #调用模块，体要做的事情
+    - name: copy sh        #定义任务的名称
+      copy: src=/usr/local/bin/zapache dest=/usr/local/bin/ #调用模块，体要做的事情
+    - name: chmod sh        #定义任务的名称
+      shell: chmod -R 777 /usr/local/bin/ #调用模块，体要做的事情
+
+    - name: copy nginx conf        #定义任务的名称
+      copy: src=/usr/local/nginx/conf/nginx.conf dest=/usr/local/nginx/conf/nginx.conf #调用模块，体要做的事情
+    - name: start nginx        #定义任务的名称
+      shell: /usr/local/nginx/sbin/nginx
+
+    - name: copy apache conf        #定义任务的名称
+      copy: src=/etc/httpd/conf/httpd.conf dest=/etc/httpd/conf/httpd.conf #调用模块，体要做的事情
+    - name: start apache        #定义任务的名称
+      shell: systemctl start httpd.service
+      #notify:                 #定义执行一个动作(action)让handlers来引用执行，与handlers配合使用
+       #- start apache 
+  #handlers:                                    #处理器：更加tasks中notify定义的action触发执行相应的处理动作
+    #- name: start apache                     #要与notify定义的内容相同
+      #service: name=httpd state=started      #触发要执行的动作
+    
+    - name: useradd zabbix        #定义任务的名称
+      shell: useradd zabbix
+    
+    - name: chmod /tmp        #定义任务的名称
+      shell: chmod -R 777 /tmp/
+
+    - name: start zabbix        #定义任务的名称
+      shell: /usr/local/zabbix/sbin/zabbix_agentd

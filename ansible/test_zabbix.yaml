@@ -1,0 +1,34 @@
+---
+- hosts: 192.168.12.132     #定义需要执行主机
+  remote_user: root       #远程用户
+  vars:                   #定义变量
+    http_port: 8080       #变量
+
+  
+  tasks:                             #定义一个任务的开始
+    - name: mkdir /root/hahaha      #定义任务的名称
+      file: path=/root/hahaha   owner=zabbix state=directory mode=0777   #调用模块，具体要做的事情
+    - name: touch /root/123456.txt     #定义任务的名称
+      file: path=/root/123456.txt  owner=zabbix state=touch mode=0777   #调用模块，具体要做的事情
+    - name: install httpd    #定义任务的名称
+      yum: name=httpd state=installed  #调用模块，具体要做的事情
+    - name: restart httpd    #定义任务的名称
+      service: name=httpd state=restarted enabled=true   #调用模块，具体要做的事情
+    - name: mkdir directory    #定义任务的名称
+      file: path=/xixi/ state=directory owner=zabbix group=zabbix mode=0777 #调用模块，具体要做的事情
+    - name: mkdir directory    #定义任务的名称
+      file: path=/xixi/haha state=directory mode=0777 #调用模块，具体要做的事情
+    - name: copy file   #定义任务的名称
+      file: src=/root/initial-setup-ks.cfg dest=/root mode=0777 #调用模块，具体要做的事情
+    - name: copy apache conf        
+      copy: src=/etc/httpd/conf/httpd.conf dest=/etc/httpd/conf/httpd.conf mode=0755
+      notify:                                  #定义执行一个动作(action)让handlers来引用执行，与handlers配合使用
+        - restart apache
+      tags: inshttpd
+    - name: install package
+      yum: name=libevent-devel,net-snmp-devel,curl-devel,gcc,pcre-devel,openssl-devel state=installed
+    - name: restart nginx
+      shell: killall -9 nginx && /usr/local/nginx/sbin/nginx 
+  handlers: 
+    - name: restart apache
+      service: name=httpd state=restarted enabled=true 

@@ -1,0 +1,128 @@
+---
+- hosts: 192.168.12.131    #定义需要执行主机
+  remote_user: root       #远程用户
+  vars:                   #定义变量
+    http_port: 8080       #变量
+
+  
+  tasks:
+#yum_repo  
+    - name: copy yum        
+      copy: src=/etc/yum.repos.d/yum.tar.gz dest=/etc/yum.repos.d/
+    - name: tar gz        
+      shell: tar -xzvf /etc/yum.repos.d/yum.tar.gz  -C /etc/yum.repos.d/
+    #- name: yum         
+      #shell: yum clean all && yum repolist && yum makecache
+
+      
+    - name: create /xia          
+      file: path=/xia state=directory mode=0755  
+    - name: create /xia/software          
+      file: path=/xia/software state=directory mode=0755
+      
+    - name: install rely_package
+      yum: name=libevent-devel,net-snmp-devel,curl-devel,gcc,pcre-devel,openssl-devel state=installed
+
+#nginx      
+    - name: copy nginx        
+      copy: src=/xia/software/nginx-1.19.1.tar.gz dest=/xia/software
+    - name: tar -xzvf nginx gz        
+      shell: tar -xzvf /xia/software/nginx-1.19.1.tar.gz  -C /xia/software/
+    - name: create /usr/local/nginx        
+      file: path=/usr/local/nginx state=directory mode=0777
+    - name: install nginx
+      shell: cd /xia/software/nginx-1.19.1/;./configure  --prefix=/usr/local/nginx  --with-http_stub_status_module --with-http_ssl_module; make && make install
+    - name: copy nginx conf        
+      copy: src=/usr/local/nginx/conf/nginx.conf dest=/usr/local/nginx/conf/nginx.conf mode=0755
+      notify:                                  #定义执行一个动作(action)让handlers来引用执行，与handlers配合使用
+        - restart_nginx
+      tags: install_nginx
+
+#zabbix
+    - name: copy zabbix        
+      copy: src=/xia/software/zabbix-4.0.4.tar.gz dest=/xia/software
+    - name: tar -xzvf zabbix gz        
+      shell: tar -xzvf /xia/software/zabbix-4.0.4.tar.gz  -C /xia/software/
+    - name: create /usr/local/zabbix        
+      file: path=/usr/local/zabbix owner=zabbix group=zabbix state=directory mode=0777
+    - name: install zabbix
+      shell: cd /xia/software/zabbix-4.0.4/;./configure --prefix=/usr/local/zabbix  --enable-server  --enable-agent --enable-java  --with-mysql --with-libxml2 --with-unixodbc  --with-net-snmp --with-ssh2 --with-openipmi --with-ldap --with-libcurl --with-iconv;make&&make install      
+   
+    - name: copy config        
+      copy: src=/usr/local/zabbix/etc/zabbix_agentd.conf dest=/usr/local/zabbix/etc/zabbix_agentd.conf  mode=0755
+    - name: rm conf        
+      shell: rm -rf  /usr/local/zabbix/etc/zabbix_agentd.conf.d
+    - name: copy zabbix config        
+      copy: src=/usr/local/zabbix/etc/zabbix_agentd.conf.d dest=/usr/local/zabbix/etc/ mode=0755
+
+    - name: copy nginx_status sh        
+      copy: src=/usr/local/bin/nginx_status.sh dest=/usr/local/bin/ mode=0777
+    - name: copy zapache sh        
+      copy: src=/usr/local/bin/zapache dest=/usr/local/bin/ mode=0777
+    #- name: useradd zabbix        
+      #shell: useradd zabbix
+    - name: chmod /tmp        
+      shell: chmod -R 777 /tmp/
+      notify:                                  
+        - restart zabbix_agentd
+      tags: install zabbix_agentd        
+
+#apache
+    - name: copy apache conf        
+      copy: src=/etc/httpd/conf/httpd.conf dest=/etc/httpd/conf/httpd.conf mode=0755
+      notify:                                  
+        - restart apache
+      tags: install httpd     
+
+#handlers
+  handlers: 
+    - name: restart_mysql
+      service: name=mysqld state=restarted enabled=true
+    - name: restart_nginx
+      shell: killall -9 nginx;/usr/local/nginx/sbin/nginx
+    - name: restart zabbix_server
+      shell: killall -9 zabbix_server;/usr/local/zabbix/sbin/zabbix_server
+    - name: restart zabbix_agentd
+      shell: killall -9 zabbix_agentd;/usr/local/zabbix/sbin/zabbix_agentd
+    - name: restart php_fpm
+      service: name=php-fpm state=restarted enabled=true      
+    - name: restart apache
+      service: name=httpd state=restarted enabled=true
+    #定义执行一个动作(action)让handlers来引用执行，与handlers配合使用
+    #处理器：更加tasks中notify定义的action触发执行相应的处理动作
+    #要与notify定义的内容相同
+    #触发要执行的动作
+
+
+      
+
+
+
+
+      
+
+
+      
+
+
+
+
+  
+
+
+
+      
+
+
+
+
+
+
+      
+
+      
+
+    
+
+
+

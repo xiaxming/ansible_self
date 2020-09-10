@@ -1,0 +1,9 @@
+---
+- hosts: 192.168.12.131    #定义需要执行主机
+  remote_user: root       #远程用户
+  vars:                   #定义变量
+    http_port: 8080       #变量
+
+  tasks:
+    - name: modify conf
+      shell: mysql -uroot -p123456 -e "GRANT ALL ON *.* TO 'mysql_monitor'@'localhost' identified by 'mysql_monitor';"    

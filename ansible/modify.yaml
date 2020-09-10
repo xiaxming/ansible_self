@@ -1,0 +1,15 @@
+---
+- hosts: 192.168.12.131    #定义需要执行主机
+  remote_user: root       #远程用户
+  vars:                   #定义变量
+    http_port: 8080       #变量
+
+  tasks:
+    - name: modify conf
+      lineinfile: 
+         dest: /usr/local/nginx/conf/nginx.conf
+         #regexp: '^#vhost' 
+         insertafter: '(^\s*)default_type' 
+         line: '    vhost_traffic_status_zone;'   
+  tags:
+   - http8080

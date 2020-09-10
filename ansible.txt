@@ -1,0 +1,23 @@
+firewalld，setenforce，selinux，iptables
+1.非对称秘钥生成和拷贝
+2.python依赖包安装，python安装
+
+配置yum源
+安装nginx或者http
+拷贝源码包
+解压
+安装nginx和zabbix
+拷贝主配置文件拷服务配置文件(zabbix  agent和nginx或者httpd的)
+拷贝其他配置文件
+拷贝监控脚本
+起agent服务
+网页起服务（用到notify和handle）
+
+
+把agent在server配置上，然后测试脚本，物理层部署上  zabbix安装手册和ansible手册文档输出 
+
+覆盖创建目录
+加判断 起服务时端口被占用
+
+
+
